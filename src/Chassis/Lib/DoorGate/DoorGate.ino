@@ -38,10 +38,10 @@ void loop()
 }
 
 void openGate() {
-  myservo.write(100);
+  myservo.write(140);
 }
 
 void closeGate() {
-  myservo.write(0);
+  myservo.write(20);
 }
 
