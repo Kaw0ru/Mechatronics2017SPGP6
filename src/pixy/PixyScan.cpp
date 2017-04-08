@@ -1,6 +1,6 @@
  #include"PixyScan.h"
 
-void P_scan()
+void PixyScan::P_scan()
 {
   i=0;
   uint16_t blocks;
@@ -12,31 +12,31 @@ void P_scan()
   height = pixy.blocks[i].height;          //get height
 }
 
-void cal_area(height;width)
+void PixyScan::cal_area(height;width)
 {
 	area = width * height; //calculate the object area 
 	max_area = area + 1000;
     min_area = area – 1000;
 }
 
-void upward()
+void PixyScan::upward()
 {
   //digitaiWirte(HIGH);
 }
 
-void downward()
+void PixyScan::downward()
 {
   //digitaiWirte(LOW);
 }
 
-void PixyPosition(y)
+void PixyScan::PixyPosition(y)
 { if y>=200
     {
-      upward();
+      PixyScan::upward();
     }
   if y<=70
     {
-      downward();
+      PixyScan::downward();
     }
 }
 
