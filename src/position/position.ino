@@ -21,6 +21,7 @@ void setup() {
   // put your setup code here, to run once:
    myServo.attach(9);
    Serial.begin(9600);
+   pixy.init();
 }
 
 void loop() {
