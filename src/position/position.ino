@@ -28,20 +28,19 @@ void loop() {
   Scan();
   Serial.println(y);
   angle=myServo.read();
-  angle=PixyYCtrl(DesiredY,y,angle);
+  PixyYCtrl(DesiredY,y,angle);
   myServo.write(angle);
   delay(10);
 
 }
 
-double PixyYCtrl(int DesiredY, int CurrentY, double angle)
+void PixyYCtrl(int DesiredY, int CurrentY, double angle)
 {
   error=DesiredY-CurrentY;
   if (abs(error)>=5)
   {
   angle=angle+atan(-error/Dec);
   }
-  return angle;
 }
 
 void Scan()
