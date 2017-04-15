@@ -46,7 +46,8 @@ void loop() {
   //if y is immutable, which means the ball is out of the view, 
   // we need to reset the value of the angle
   
-  angle=PixyYCtrl(DesiredY,y,angle);// new angle
+  angle=PixyYCtrl(DesiredY,y,angle);// new angle at y
+  PixyXCtrl(DesiredX,x,k);// change the direction at x
   
   myServo.write(angle);//angle output
   
@@ -71,7 +72,7 @@ double PixyYCtrl(int DesiredY, int CurrentY, double angle)
   }
 }
  
-void PixyXCtrl(int DesiredX, int CurrentX) 
+void PixyXCtrl(int DesiredX, int CurrentX, int k) 
 // control the x value of the ball
 {
   errorX=DesiredX-CurrentX;// error between desired_x and x
@@ -85,12 +86,18 @@ void PixyXCtrl(int DesiredX, int CurrentX)
     }
  
   }
+  else{ if (k>10) // the ball is out of the view
+   {
+    // turn right (60 degree)
+    }
+  
+  
   else{
     // go straight
+   }
   }
   
 }
-
 
 
 void Scan()
