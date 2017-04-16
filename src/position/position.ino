@@ -2,106 +2,65 @@
 #include "Servo.h"
 #include "Pixy.h"
 #include "SPI.h"
+#include "Far.h"
 
 Servo myServo;
 Pixy pixy;
-const int DesiredY=100; //Desired y value of the ball (Max y=199)
-const int DesiredX=160; //Desired x value of the ball (Max x=319)
+const int DesiredLoc[2] = {160, 100}; //Desired y value of the ball (Max y=199)
+// const int DesiredX=160; //Desired x value of the ball (Max x=319)
+
 int x=0;
 int y=0;
-int width=0;
-int height=0;
-double angle=100;
+double angle=93;
 int  i=0;
-int  Dec=100; // a constant which reflects the relationship between Y and angle
 int signature;
-int errorX;
-int errorY;
 int k=0;
-int last_y;
-double delta;
+int scanResult[4] = {0, 0, 0, 0};
+int *P_scanRe=&scanResult[0];
+int scanResultHist[4] ={0, 0, 0, 0};
+int *P_scanReHis=&scanResultHist[0];
+int CtlCmd[4]={0,0,0,0};
+int *P_CtlCmd=&CtlCmd[0];
 
 void setup() {
-  // put your setup code here, to run once:
    myServo.attach(9);
    Serial.begin(9600);
    pixy.init();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  Scan();
-  if (last_y==y){
-  k=k+1;
-  }
-  else
-  {k=0;}// to check how many times y keeps immutable
-   Serial.println(x);
-  Serial.println(y);
-  angle=myServo.read();
-  
-   if (k>=10){
-    angle=100;
-  } 
-  //if y is immutable, which means the ball is out of the view, 
-  // we need to reset the value of the angle
-  
-  angle=PixyYCtrl(DesiredY,y,angle);// new angle at y
-  PixyXCtrl(DesiredX,x,k);// change the direction at x
-  
-  myServo.write(angle);//angle output
-  
-  Serial.println(angle);
-  Serial.println('\n');
-  last_y=y;//
-  delay(10);
+   myServo.write(angle);// write the angle
+   Serial.println(angle);
+   delay(10);
+   
+   angle=100*myServo.read();// read the angle
+   
+   for(int j = 0; j<4; j++)
+   { 
+  *(P_scanReHis+j) = *(P_scanRe+j);
+   }// Store results
 
-}
+    Scan(P_scanRe); // Get current scan reults
+    
+  Serial.println(scanResult[1]);
+  Serial.println(scanResultHist[1]);
 
-double PixyYCtrl(int DesiredY, int CurrentY, double angle)
-// control the y value of the ball
-{
-  errorY=DesiredY-CurrentY;// error between desired_y and y
+  Far(P_scanRe, P_scanReHis, &DesiredLoc[0], k, &angle, P_CtlCmd);// give the control cmd
   
-  if (abs(errorY)>=8) //to avoid the tiny disturbance
-  {
-  delta=double(errorY)/double(Dec);
-  delta=9*atan(delta)/3.14; // delta angle
-  angle=angle+delta;
-  return angle;
-  }
-}
- 
-void PixyXCtrl(int DesiredX, int CurrentX, int k) 
-// control the x value of the ball
-{
-  errorX=DesiredX-CurrentX;// error between desired_x and x
-  if (abs(errorX)>=10) //to avoid the tiny disturbance
-  {
-    if (errorX>0){
-      // turn left
-    }
-    else{
-      //turn right
-    }
- 
-  }
-  else{ if (k>10) // the ball is out of the view
-   {
-    // turn right (60 degree)
-    }
-  
-  
-  else{
-    // go straight
-   }
-  }
-  
+  k = CtlCmd[3];
+  Serial.println(k);
+  double  Angle = double(CtlCmd[2]); 
+  angle=double(Angle)/double(100);
+  Serial.println(' ');
 }
 
 
-void Scan()
+
+
+void Scan(int* p)
 {
+  int width=0;
+  int height=0;
   uint16_t blocks;
   blocks = pixy.getBlocks();  //receive data from pixy 
   signature = pixy.blocks[i].signature;    //get object's signature
@@ -109,5 +68,10 @@ void Scan()
   y = pixy.blocks[i].y;                    //get y position
   width = pixy.blocks[i].width;            //get width
   height = pixy.blocks[i].height;          //get height
+  int result[4]={x,y,width,height};
+  for (int j=0;j<4;j++)
+  {
+    *(p+j)=result[j];
+  }
 }
 
