@@ -12,6 +12,7 @@ int const DGateIdle = 100;
 int const DGateShut = 101;
 int DGatestate = DGateShut;
 int value;
+int Delay_time=0;
 
 const int DesiredLoc[2] = {160, 100}; //Desired y value of the ball (Max y=199)
 // const int DesiredX=160; //Desired x value of the ball (Max x=319)
@@ -54,20 +55,22 @@ void loop() {
    
    if (angle<=8800)
    {
-    if (angle<=7800)
-    {
-      Stop_count++;
-    }
-    else{
-      Stop_count=0;
-    }
+   
      Close_count++;
    }
    else
    {
     Close_count=0;
    } // judge if the car is close to the balls
-   
+
+    if (angle<=7800)
+    {
+      Stop_count++;
+    }
+    else{
+      Stop_count=0;
+    }// judge if the car is very close to the balls
+    
    if (Close_count>=5)
    {
     Close=1;
@@ -92,6 +95,10 @@ void loop() {
   Far(P_scanRe, P_scanReHis, &DesiredLoc[0], k, &angle, P_CtlCmd);// give the control cmd
   
   k = CtlCmd[3];
+  if (k>=10)
+  {
+    RST=1;
+  }
   //Serial.println(k);
   double  Angle = double(CtlCmd[2]); 
   angle=double(Angle)/double(100);
@@ -105,16 +112,20 @@ void loop() {
      digitalWrite (laser, HIGH); // open the laser head
    }
   value = analogRead(laserSensor);   // reads the laser detection value
-  Serial.println(value);    // outputs the laser detection value to the serial monitor
-  
+  //Serial.println(value);    // outputs the laser detection value to the serial monitor
+  //Serial.println(RST);
+  //Serial.println(DGatestate);
   OpenCarGate(Close);
   
-  if (RST==2)
+  if (RST==1)
   {
     Close=0;
     Stop=0;
+    k=10;
+    angle=93;
   }
-  delay(5);
+  delay(10);
+  Serial.println(Stop);
 }
 
 
@@ -140,33 +151,30 @@ void Scan(int* p)
 
 void OpenCarGate(int if_close)
 {
-  if ((if_close)&&(DGatestate!=DGateIdle))
+  if ((if_close)&&(RST==0))
   {
     DGatestate=DGateIdle;
     Serial.println("Idle");
    }
    else
-   {
-    if (!if_close)
     {
     DGatestate=DGateShut;
-    }
     }
   switch (DGatestate) {
     case DGateIdle:
       openGate();                  // sets the servo position according to the scaled value
       if (value < 300) {
         Serial.println("ready");
+        Delay_time=300;
         DGatestate = DGateShut;
         RST=1;
       }
       break;
     case DGateShut:
       closeGate();
-      if(RST==1)
-      {
-        RST++;
-       }
+      //delay(Delay_time);
+       Delay_time=0;
+      Serial.println(DGatestate);
        // sets the servo position according to the scaled value
       break;
   }
