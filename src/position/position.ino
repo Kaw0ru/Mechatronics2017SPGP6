@@ -3,19 +3,17 @@
 #include "Pixy.h"
 #include "SPI.h"
 #include "Far.h"
-#include "CarGateCtl.h"
-#include "PixyServoCtl.h"
-#include "Reset.h"
-#include "LaserCtl.h"
+#include "DCMotorCtl.h"
 
 Servo myServoY, myServoGate;
 Pixy pixy;
-int laserPin[2] = {3, A0};   // digital pin used to turn laser on
-//int const DGateIdle = 100;
-//int const DGateShut = 101;
-//int DGatestate = DGateShut;
-//int value;
-//int Delay_time=0;
+int laserSensor = 0;  // analog pin used to detect laser
+int laser = 3;   // digital pin used to turn laser on
+int const DGateIdle = 100;
+int const DGateShut = 101;
+int DGatestate = DGateShut;
+int value;
+int Delay_time=0;
 
 const int DesiredLoc[2] = {160, 100}; //Desired y value of the ball (Max y=199)
 // const int DesiredX=160; //Desired x value of the ball (Max x=319)
@@ -32,13 +30,14 @@ int *P_scanReHis=&scanResultHist[0];
 int CtlCmd[4]={0,0,0,0};
 int *P_CtlCmd=&CtlCmd[0];
 
-//int Close=0;
+int Close=0;
 int Close_count=0;
-//int Stop=0;
-//int Stop_count=0;
-//int RST=0;
+int Stop=0;
+int Stop_count=0;
+int RST=0;
+int Speed=0;
 
-int isBlocked = 0;
+int DCMotorPin[4]={2,25,7,24}; //2 for EN1, 25 for DIR1, 7 for EN2, 24 for DIR2
 
 void setup() {
    pinMode(laser, OUTPUT);
@@ -50,58 +49,99 @@ void setup() {
 }
 
 void loop() {
-  Scan(P_scanRe, P_scanReHis); // Get current scan reults
-  Far(P_scanRe, P_scanReHis, &DesiredLoc[0], k, &angle, P_CtlCmd);// give the control cmd
-  k = CtlCmd[3]; //Shift register of Far function
+   if (!Stop)
+   {
+    RST=0;
+    if (!Close){
+    digitalWrite (laser, LOW);// Laser
+    }
+   myServoY.write(angle);// write the angle
+   Serial.println(angle);
+   angle=100*myServoY.read();// read the angle
+   
+   if (angle<=8800)
+   {
+   
+     Close_count++;
+   }
+   else
+   {
+    Close_count=0;
+    Speed=1;
+   } // judge if the car is close to the balls
 
+    if (angle<=7800)
+    {
+      Stop_count++;
+    }
+    else{
+      Stop_count=0;
+    }// judge if the car is very close to the balls
+    
+   if (Close_count>=5)
+   {
+    Close=1;
+    Speed=0;
+   }
+
+   if (Stop_count>=5)
+   {
+    Stop=1;
+   }
+
+   
+   for(int j = 0; j<4; j++)
+   { 
+  *(P_scanReHis+j) = *(P_scanRe+j);
+   }// Store results
+
+    Scan(P_scanRe); // Get current scan reults
+    
+ // Serial.println(scanResult[1]);
+//  Serial.println(scanResultHist[1]);
+
+  Far(P_scanRe, P_scanReHis, &DesiredLoc[0], k, &angle, P_CtlCmd);// give the control cmd
+  
+  k = CtlCmd[3];
   if (k>=10)
   {
-    Reset(); //Reset pixy servo, speed & car gate.
+    RST=1;
   }
-
   //Serial.println(k);
-  angle = double(CtlCmd[2])/double(100);
-
-  angle = PixyServoCtl(angle); // control tilting angle of pixy
-
-  if (angle < 88)
+  double  Angle = double(CtlCmd[2]); 
+  angle=double(Angle)/double(100);
+  Serial.println(' ');
+   }//Stop
+   else{
+    myServoY.write(93);
+   }
+   if (Close==1)
+   {
+     digitalWrite (laser, HIGH); // open the laser head
+   }
+  value = analogRead(laserSensor);   // reads the laser detection value
+  //Serial.println(value);    // outputs the laser detection value to the serial monitor
+  //Serial.println(RST);
+  //Serial.println(DGatestate);
+  OpenCarGate(Close);
+  
+  if (RST==1)
   {
-    Close_count++;
+    Close=0;
+    Stop=0;
+    k=10;
+    angle=93;
   }
-  else
-  { 
-    if (Close_count<5)
-    {
-    Close_count=0;
-    }
-  }
-
-  if (Close_count >= 5) // ball is near the vehicle
-  {
-    CarGateCtl(1); // open gate
-    LaserCtl(&laserPin[0], 1, &isBlocked); //enable laser
-  }
-  else
-  {
-    CarGateCtl(0); //Close gate
-    LaserCtl(&laserPin[0], 0, &isBlocked); //disable laser
-  }
-
-  if (isBlocked)
-  {
-    Reset();
-  }
+  DCMotorCtl(CtlCmd[0], Speed, CtlCmd[1], Stop, &DCMotorPin[0]);
+  delay(10);
+  Serial.println(Stop);
 }
 
 
 
 
-void Scan(int* p, int* p_hist)
+void Scan(int* p)
 { 
-  for(int j = 0; j<4; j++)
-   { 
-      *(p_hist+j) = *(p+j);
-   }// Store results
   int width=0;
   int height=0;
   uint16_t blocks;
@@ -117,3 +157,43 @@ void Scan(int* p, int* p_hist)
     *(p+j)=result[j];
   }
 }
+
+void OpenCarGate(int if_close)
+{
+  if ((if_close)&&(RST==0))
+  {
+    DGatestate=DGateIdle;
+   // Serial.println("Idle");
+   }
+   else
+    {
+    DGatestate=DGateShut;
+    }
+  switch (DGatestate) {
+    case DGateIdle:
+      openGate();                  // sets the servo position according to the scaled value
+      if (value < 300) {
+   //     Serial.println("ready");
+        Delay_time=300;
+        DGatestate = DGateShut;
+        RST=1;
+      }
+      break;
+    case DGateShut:
+      closeGate();
+      //delay(Delay_time);
+       Delay_time=0;
+    //  Serial.println(DGatestate);
+       // sets the servo position according to the scaled value
+      break;
+  }
+}
+void openGate() {
+  myServoGate.write(150);
+}
+
+void closeGate() {
+  myServoGate.write(20);
+}
+
+
