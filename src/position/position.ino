@@ -87,8 +87,8 @@ double rightThrottle;
 double leftSetpoint;
 double rightSetpoint;
 
-double leftKs[3] = {0.6, 5, 0};
-double rightKs[3] = {0.6, 5, 0};
+double leftKs[3] = {1, 10, 0.2};
+double rightKs[3] = {1, 10, 0.2};
 
 PID leftPID(&leftAbs_duration, &leftThrottle, &leftSetpoint, leftKs[0], leftKs[1], leftKs[2], DIRECT);
 PID rightPID(&rightAbs_duration, &rightThrottle, &rightSetpoint, rightKs[0], rightKs[1], rightKs[2],DIRECT);
@@ -100,8 +100,8 @@ void setup() {
 //   pinMode(DIR1,OUTPUT);
 //   pinMode(EN2,OUTPUT);
 //   pinMode(DIR2,OUTPUT);
-   myServoY.attach(3);
-   myServoGate.attach(2);
+   myServoY.attach(26);
+   myServoGate.attach(27);
    Serial.begin(9600);
    pixy.init();
   leftIni(0);
@@ -127,7 +127,7 @@ void loop() {
     Speed=1;
    } // judge if the car is close to the balls
 
-    if (angle<=7800)
+    if (angle<=7000)
     {
       Stop_count++;
     }
@@ -172,7 +172,7 @@ void loop() {
      digitalWrite (laser, HIGH); // open the laser head
    }
    else{
-    digitalWrite (laser, LOW); // close the laser head
+     digitalWrite (laser, LOW); // close the laser head
    }
    
   value = analogRead(laserSensor);   // reads the laser detection value
@@ -255,28 +255,44 @@ void DCMotorCtl(bool FWD, int degree)
   double  DesiredSpeed2;
   if (Stop) 
   {
-   DesiredSpeed1 = 80;
-   DesiredSpeed2 = 80;
+   DesiredSpeed1 = 25;
+   DesiredSpeed2 = 25;
   }
   else {
     if (FWD){
       if (Speed){// High Speed
-      DesiredSpeed1 = 200;
-      DesiredSpeed2 = 200;
+      DesiredSpeed1 = 120;
+      DesiredSpeed2 = 120;
       }
       else{ // Low Speed
-        DesiredSpeed1 = 80;
-        DesiredSpeed2 = 80;
+        DesiredSpeed1 = 40;
+        DesiredSpeed2 = 40;
       }
     }
     else{
       if (degree>0){ // turn right
-        DesiredSpeed1 = 80;
-        DesiredSpeed2 = 0;
+        if (degree>20)
+        {
+          DesiredSpeed1 = 60;
+          DesiredSpeed2 = 0;
+        }
+        else
+        {
+         DesiredSpeed1 = 30;
+          DesiredSpeed2 = 0;
+        }
       }
       else{ // turn left
-        DesiredSpeed1 = 0;
-        DesiredSpeed2 = 80;
+        if (abs(degree)>20)
+        {
+          DesiredSpeed1 = 0;
+          DesiredSpeed2 = 60;
+        }
+        else
+        {
+         DesiredSpeed1 =  0;
+          DesiredSpeed2 = 30;
+        }
       }
     }
   }
@@ -407,8 +423,11 @@ void Move(int LsetPt,int RsetPt)
     leftResult = leftPID.Compute();//PID conversion is complete and returns 1
     if(leftResult)
     {
-      Serial.print("Left Pluse: ");
-      Serial.println(leftDuration); 
+//      Serial.print("Left Throttle: ");
+//      Serial.println(leftThrottle); 
+//      Serial.print("Left Pulse: ");
+//      Serial.println(leftDuration); 
+//       Serial.println(" "); 
       leftDuration = 0; //Count clear, wait for the next count
     }
    
@@ -430,8 +449,12 @@ void Move(int LsetPt,int RsetPt)
     rightResult = rightPID.Compute();//PID conversion is complete and returns 1
     if(rightResult)
     {
-      Serial.print("Right Pluse: ");
-      Serial.println(rightDuration); 
+//      Serial.print("Right Throttle: ");
+//      Serial.println(rightThrottle); 
+//     
+//      Serial.print("Right Pulse: ");
+//      Serial.println(rightDuration); 
+//      Serial.println("  "); 
       rightDuration = 0; //Count clear, wait for the next count
     }
 }
