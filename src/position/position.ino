@@ -93,6 +93,11 @@ double rightKs[3] = {1, 10, 0.2};
 PID leftPID(&leftAbs_duration, &leftThrottle, &leftSetpoint, leftKs[0], leftKs[1], leftKs[2], DIRECT);
 PID rightPID(&rightAbs_duration, &rightThrottle, &rightSetpoint, rightKs[0], rightKs[1], rightKs[2],DIRECT);
 
+// structure parameters
+
+bool exeOnce = true;
+long stopStartingTime;
+
 void setup() {
    pinMode(laser, OUTPUT);
    pinMode(laserSensor, INPUT);
@@ -110,6 +115,11 @@ void setup() {
 }
 
 void loop() {
+	FindandCatchBalls();
+}
+
+void FindandCatchBalls()
+{
    if (!Stop)
    {
     RST=0;
@@ -161,10 +171,22 @@ void loop() {
     RST=1;
   }
   
-
+  exeOnce = true;
   }
   else{ //Stop pixy's scaning
     myServoY.write(93);
+	if (exeOnce)
+		{
+			stopStartingTime = millis();
+			exeOnce = false;
+		}
+	long stopCurrentTime = millis();
+	int stopDeltaT = stopCurrentTime - stopStartingTime;
+  Serial.println(stopDeltaT);
+	if (stopDeltaT > 3000)
+		{
+			RST=1;
+		}
    }
    
    if (Close==1)
@@ -193,8 +215,6 @@ void loop() {
   DCMotorCtl(CtlCmd[0], CtlCmd[1]);
   delay(10); //sample period
 }
-
-
 
 
 void Scan(int* p1, int* p2)
