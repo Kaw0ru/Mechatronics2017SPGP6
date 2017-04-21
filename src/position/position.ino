@@ -94,9 +94,9 @@ PID leftPID(&leftAbs_duration, &leftThrottle, &leftSetpoint, leftKs[0], leftKs[1
 PID rightPID(&rightAbs_duration, &rightThrottle, &rightSetpoint, rightKs[0], rightKs[1], rightKs[2],DIRECT);
 
 // structure parameters
-
 bool exeOnce = true;
 long stopStartingTime;
+int globalState = 0; // global state, 0 for initial advance, 1 for search and catch the ball, 2 for search the gate, 3 for release the ball
 
 void setup() {
    pinMode(laser, OUTPUT);
@@ -107,7 +107,7 @@ void setup() {
 //   pinMode(DIR2,OUTPUT);
    myServoY.attach(26);
    myServoGate.attach(27);
-   Serial.begin(9600);
+   //Serial.begin(9600);
    pixy.init();
   leftIni(0);
   rightIni(0);
@@ -115,10 +115,19 @@ void setup() {
 }
 
 void loop() {
-	FindandCatchBalls();
+	if (globalState == 0)
+   {
+       Move(200, 200);
+       delay(2000);
+      globalState = 1;
+   }
+   if (globalState == 1)
+   {
+      SearchandCatchBalls();
+   }
 }
 
-void FindandCatchBalls()
+void SearchandCatchBalls()
 {
    if (!Stop)
    {
@@ -127,7 +136,7 @@ void FindandCatchBalls()
    //Serial.println(angle);
     angle=100*myServoY.read();// read the angle
    
-   if (angle<=8800)
+   if (angle<=8500)
    {
      Close_count++;
    }
@@ -137,7 +146,7 @@ void FindandCatchBalls()
     Speed=1;
    } // judge if the car is close to the balls
 
-    if (angle<=7000)
+    if (angle<=6500)
     {
       Stop_count++;
     }
@@ -158,10 +167,7 @@ void FindandCatchBalls()
 
 
    Scan(P_scanRe,P_scanReHis); // Get and Store the scan reults
-    
-
-
-  Far(P_scanRe, P_scanReHis, &DesiredLoc[0], k, &angle, P_CtlCmd);// give the control cmd
+   Far(P_scanRe, P_scanReHis, &DesiredLoc[0], k, &angle, P_CtlCmd);// give the control cmd
   
   k = CtlCmd[3]; // robustness para
   angle=double(CtlCmd[2])/double(100); // ServoY angle
@@ -182,7 +188,7 @@ void FindandCatchBalls()
 		}
 	long stopCurrentTime = millis();
 	int stopDeltaT = stopCurrentTime - stopStartingTime;
-  Serial.println(stopDeltaT);
+  //Serial.println(stopDeltaT);
 	if (stopDeltaT > 3000)
 		{
 			RST=1;
@@ -284,7 +290,8 @@ void DCMotorCtl(bool FWD, int degree)
       DesiredSpeed1 = 120;
       DesiredSpeed2 = 120;
       }
-      else{ // Low Speed
+      else
+      { // Low Speed
         DesiredSpeed1 = 40;
         DesiredSpeed2 = 40;
       }
