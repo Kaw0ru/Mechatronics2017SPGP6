@@ -52,7 +52,8 @@ void Far(int* scanResult, int* scanResultHist, int* DesiredLoc, int k, double* a
   		angX = 0;
   	}
   }
- 
+
+ // determine angY
   double ang= *angle;
   if (abs(errorY)>=8) //to avoid the tiny disturbance
   {
