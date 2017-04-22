@@ -1,5 +1,5 @@
 
-#include "Servo.h"
+#include "ServoTimer2.h"
 #include "Pixy.h"
 #include "SPI.h"
 #include "Far.h"
@@ -7,7 +7,7 @@
 
 
 
-Servo myServoY, myServoGate;
+ServoTimer2 myServoY, myServoGate;
 Pixy pixy;
 
 
