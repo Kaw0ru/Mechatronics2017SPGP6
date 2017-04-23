@@ -9,15 +9,11 @@ void setup()
 
 void loop()
 {
-  for (int pos = 0; pos < 180; pos++)
-  {
-    pixyCtl.write(pos);
-    delay(15);
-  }
-  for (int pos = 180; pos > 0; pos--)
-  {
-    pixyCtl.write(pos);
-    delay(15);
-  }
+  pixyCtl.write(0);
+
+  delay(2000);
+
+  pixyCtl.write(150);
+  delay(2000);
 }
 

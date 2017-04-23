@@ -65,7 +65,7 @@ void ServoTimer2::detach()
 }
 void ServoTimer2::write(int angle)
 {
-   int pulsewidth = angle * 12.3 + 454;
+   int pulsewidth = angle * 12.3 + 454; //===========================NEEDS CHANGING===============================
    writeChan(this->chanIndex, pulsewidth); // call the static function to store the data for this servo
 }
 int ServoTimer2::read()
@@ -76,7 +76,7 @@ int ServoTimer2::read()
    else
 	 pulsewidth  = 0;
 
-   int angle = double(pulsewidth - 454) / 12.3;
+   int angle = double(pulsewidth - 454) / 12.3;//===========================NEEDS CHANGING===============================
    return angle;
 }
 boolean_new ServoTimer2::attached()
