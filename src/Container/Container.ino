@@ -7,7 +7,7 @@
 Servo myServoY;
 Pixy pixy;
 
-const int DesiredLoc[3] = {160, 100, 20000}; //Desired y value of the color bar (Max y=199)
+const int DesiredLoc[3] = {160, 100, 10000}; //Desired y value of the color bar (Max y=199)
                                             //Desired x value of the color bar (Max x=319)
 											//Desired area value of the color bar (Max area= 64000)
 int x=0;
@@ -89,27 +89,14 @@ void setup() {
 void loop() {
 
 	myServoY.write(angle);// write the angle
-   //Serial.println(angle);
-    angle=100*myServoY.read();// read the angle
+
 
    Scan(P_scanRe,P_scanReHis); // Get and Store the scan reults
     
-  GateCmd(P_scanRe, P_scanReHis, &DesiredLoc[0], k, &angle, P_CtlCmd);// give the control cmd
+  GateCmd(P_scanRe, P_scanReHis, &DesiredLoc[0], k, P_CtlCmd);// give the control cmd
   k = CtlCmd[6]; // robustness para
-  angle=double(CtlCmd[5])/double(100); // ServoY angle
 
-//  Serial.println(angle);
-//  Serial.println(' ');
 
-  if(angle< 50)
-  {
-    angle = 50;
-  }
-
-  if(angle> 120)
-  {
-    angle = 120;
-  }
   
   DCMotorCtl(P_CtlCmd);
   delay(10); //sample period
@@ -131,6 +118,7 @@ void Scan(int* p1, int* p2)
  // Serial.println(y);
   width = pixy.blocks[i].width;            //get width
   height = pixy.blocks[i].height;          //get height
+// Serial.println(height);
   int result[4]={x,y,width,height};
   for (int j=0;j<4;j++)
   {
@@ -161,8 +149,8 @@ void DCMotorCtl(int* pointer)
       DesiredSpeed2 = 120;
       }
       else{ // Low Speed
-        DesiredSpeed1 = 40;
-        DesiredSpeed2 = 40;
+        DesiredSpeed1 = 20;
+        DesiredSpeed2 = 20;
       }
       if (BWD == 1){
       	DesiredSpeed1 = -DesiredSpeed1;
@@ -172,19 +160,19 @@ void DCMotorCtl(int* pointer)
     else{
      if (BWD == 0){
       if (degree>0){ // turn right
-        if (degree>20)
+        if (degree>40)
         {
           DesiredSpeed1 = 60;
           DesiredSpeed2 = 0;
         }
         else
         {
-         DesiredSpeed1 = 30;
+         DesiredSpeed1 = 20;
           DesiredSpeed2 = 0;
         }
       }
       else{ // turn left
-        if (abs(degree)>20)
+        if (abs(degree)>40)
         {
           DesiredSpeed1 = 0;
           DesiredSpeed2 = 60;
@@ -192,13 +180,13 @@ void DCMotorCtl(int* pointer)
         else
         {
          DesiredSpeed1 =  0;
-          DesiredSpeed2 = 30;
+          DesiredSpeed2 = 20;
         }
       }
   }
    else{
    	if (degree>0){ // turn right
-        if (degree>20)
+        if (degree>40)
         {
           DesiredSpeed1 = 0;
           DesiredSpeed2 = 60;
@@ -206,18 +194,18 @@ void DCMotorCtl(int* pointer)
         else
         {
          DesiredSpeed1 = 0;
-          DesiredSpeed2 = 30;
+          DesiredSpeed2 = 20;
         }
       }
       else{ // turn left
-        if (abs(degree)>20)
+        if (abs(degree)>40)
         {
           DesiredSpeed1 = 60;
           DesiredSpeed2 = 0;
         }
         else
         {
-         DesiredSpeed1 =  30;
+         DesiredSpeed1 =  20;
           DesiredSpeed2 = 0;
         }
       }

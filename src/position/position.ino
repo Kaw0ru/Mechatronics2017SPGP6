@@ -97,6 +97,8 @@ PID rightPID(&rightAbs_duration, &rightThrottle, &rightSetpoint, rightKs[0], rig
 bool exeOnce = true;
 long stopStartingTime;
 int globalState = 0; // global state, 0 for initial advance, 1 for search and catch the ball, 2 for search the gate, 3 for release the ball
+//long lastTime;
+//long currentTime;
 
 void setup() {
    pinMode(laser, OUTPUT);
@@ -115,6 +117,9 @@ void setup() {
 }
 
 void loop() {
+  //lastTime = currentTime;
+  //currentTime = millis();
+  //Serial.println(currentTime - lastTime);
 	if (globalState == 0)
    {
        Move(200, 200);

@@ -1,4 +1,4 @@
-void GateCmd(int* scanResult, int* scanResultHist, int* DesiredLoc, int k, double* angle, int* P_CtlCmd)
+void GateCmd(int* scanResult, int* scanResultHist, int* DesiredLoc, int k, int* P_CtlCmd)
 {
 	bool FWD = 0; // =1 Go straight
 	bool BWD = 0; // =0 Go backward
@@ -8,10 +8,11 @@ void GateCmd(int* scanResult, int* scanResultHist, int* DesiredLoc, int k, doubl
   int angY = 0;
 	int errorX = *(DesiredLoc) - *(scanResult);
 	int errorY = *(1+DesiredLoc) - *(1+scanResult);
-  int Area = (*(2+scanResult)**(3+scanResult));
-	int errorArea = *(2+DesiredLoc)- Area;
+  long int Area = (long(*(2+scanResult))*long(*(3+scanResult)));
+ // Serial.println(Area);
+  long int errorArea =long(5) *long(*(2+DesiredLoc))- Area;
 	
-	Serial.println(errorArea);//Desired Area = 20000 (maximum is 64000) 
+	 Serial.println(errorArea);//Desired Area = 20000 (maximum is 64000) 
 
 	if (*(scanResult+1)==*(scanResultHist+1)) // to check how many times y keeps immutable
 	{
@@ -60,26 +61,9 @@ void GateCmd(int* scanResult, int* scanResultHist, int* DesiredLoc, int k, doubl
   	}
   }
 
-  // determine angY
-   double ang= *angle;
-  if (abs(errorY)>=8) //to avoid the tiny disturbance
-  {
-    double Dec = 100; // a constant which reflects the relationship between Y and angle
-    double delta = double(errorY) / Dec;
-    delta = 9*atan(delta)/3.14; // delta angle
-    ang = ang + delta*100;
-    
-	}
-  angY=int(ang);
-  //Serial.println(angY);
-  if (k>=10)
-  {
-    angY=*angle+(11000-*angle)/2;
-  }
-
   // determine the distance and speed
   {
-  	if (abs(errorArea) > 100) //to avoid the tiny disturbance
+  	if (abs(errorArea) > 500) //to avoid the tiny disturbance
   	{
   		if(errorArea > 0)// robot needs to get closer
   		{
@@ -90,7 +74,7 @@ void GateCmd(int* scanResult, int* scanResultHist, int* DesiredLoc, int k, doubl
   			BWD = 1; //move backward
   		}
 
-  		if(abs(errorArea) < 1000) //robot is very close to the diresed position in front of the container
+  		if(abs(errorArea) < 5000) //robot is very close to the diresed position in front of the container
   		{
             Speed = 0; // low speed
   		}
@@ -100,8 +84,8 @@ void GateCmd(int* scanResult, int* scanResultHist, int* DesiredLoc, int k, doubl
   		}
 
   	}
-  	//if ((*(2+scanResult)**(3+scanResult))>20000)
-  	else{
+  	if (Area>50000)
+  	{
       Reached = 1;
   	}
   }
