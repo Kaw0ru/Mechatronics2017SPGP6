@@ -3,10 +3,20 @@
 
 void setup() {
   // put your setup code here, to run once:
-  SetupTransmitter(2);
+  SetupTransmitter(8);
+  pinMode(7,INPUT);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  SendMsg(100);
+  bool isOpen = digitalRead(7);
+  if (isOpen)
+  {
+    SendMsg(101);
+  }
+  else
+  {
+    SendMsg(100);
+  }
+  
 }

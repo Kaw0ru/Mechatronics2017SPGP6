@@ -1,4 +1,4 @@
-void Far(int* scanResult, int* scanResultHist, int* DesiredLoc, int k, double* angle, int* P_CtlCmd)
+void Far(int* scanResult, int* scanResultHist, int* DesiredLoc, int k, double* angle, int* P_CtlCmd, unsigned long* outOfViewStartingTime, int* globalState)
 {
 	bool FWD = 0;
 	int angX = 0;
@@ -19,7 +19,13 @@ void Far(int* scanResult, int* scanResultHist, int* DesiredLoc, int k, double* a
 	// Determin angX
 	if (k>10) // the ball is out of the view
   {
-  
+    unsigned long outofviewcurrenttime = millis();
+
+    if (outofviewcurrenttime - *(outOfViewStartingTime) > 5000)
+    {
+      *(globalState) = 2;
+    }
+    
     if (errorX > 0)
     {
     	FWD = 0;
@@ -33,6 +39,7 @@ void Far(int* scanResult, int* scanResultHist, int* DesiredLoc, int k, double* a
   }
   else
   {
+    *(outOfViewStartingTime) = millis();
   	if (abs(errorX)>=10) //to avoid the tiny disturbance
   	{
     	if (errorX>0)

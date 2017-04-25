@@ -5,7 +5,9 @@
 #include "Far.h"
 #include "PID_v1.h"
 
+#include "RF/RH_ASK.h"
 
+RH_ASK driver (2000, 44,8,45,true);
 
 ServoTimer2 myServoY, myServoGate;
 Pixy pixy;
@@ -95,10 +97,9 @@ PID rightPID(&rightAbs_duration, &rightThrottle, &rightSetpoint, rightKs[0], rig
 
 // structure parameters
 bool exeOnce = true;
-long stopStartingTime;
+unsigned long stopStartingTime = 0;
 int globalState = 0; // global state, 0 for initial advance, 1 for search and catch the ball, 2 for search the gate, 3 for release the ball
-//long lastTime;
-//long currentTime;
+unsigned long outOfViewStartingTime= millis();
 
 void setup() {
    pinMode(laser, OUTPUT);
@@ -109,39 +110,45 @@ void setup() {
 //   pinMode(DIR2,OUTPUT);
    myServoY.attach(26);
    myServoGate.attach(27);
-   //Serial.begin(9600);
+   Serial.begin(9600);
    pixy.init();
   leftIni(0);
   rightIni(0);
+  driver.init();
    
 }
 
 void loop() {
-  //lastTime = currentTime;
-  //currentTime = millis();
-  //Serial.println(currentTime - lastTime);
-	if (globalState == 0)
-   {
-       Move(200, 200);
-       delay(2000);
-      globalState = 1;
-   }
-   if (globalState == 1)
-   {
-      SearchandCatchBalls();
-   }
+  Serial.println(globalState);
+  if (globalState == 0)
+  {
+    Move(200,200);
+    delay(2000);
+    globalState = 1;   
+  }
+  else if (globalState == 1)
+  {
+    ScanAndCatchBall();
+  }
+  else if (globalState == 2)
+  {
+    leftStop();
+    rightStop();
+    //OpenGarageDoor(true);
+    // SearchGate(); //=======================================
+  }
 }
 
-void SearchandCatchBalls()
+void ScanAndCatchBall()
 {
-   if (!Stop)
+  if (!Stop)
    {
     RST=0;
     myServoY.write(angle);// write the angle
    //Serial.println(angle);
     angle=100*myServoY.read();// read the angle
    
-   if (angle<=8500)
+   if (angle<=8800)
    {
      Close_count++;
    }
@@ -151,7 +158,7 @@ void SearchandCatchBalls()
     Speed=1;
    } // judge if the car is close to the balls
 
-    if (angle<=6500)
+    if (angle<=7000)
     {
       Stop_count++;
     }
@@ -172,7 +179,10 @@ void SearchandCatchBalls()
 
 
    Scan(P_scanRe,P_scanReHis); // Get and Store the scan reults
-   Far(P_scanRe, P_scanReHis, &DesiredLoc[0], k, &angle, P_CtlCmd);// give the control cmd
+    
+
+
+  Far(P_scanRe, P_scanReHis, &DesiredLoc[0], k, &angle, P_CtlCmd, &outOfViewStartingTime, &globalState);// give the control cmd
   
   k = CtlCmd[3]; // robustness para
   angle=double(CtlCmd[2])/double(100); // ServoY angle
@@ -186,19 +196,34 @@ void SearchandCatchBalls()
   }
   else{ //Stop pixy's scaning
     myServoY.write(93);
-	if (exeOnce)
-		{
-			stopStartingTime = millis();
-			exeOnce = false;
-		}
-	long stopCurrentTime = millis();
-	int stopDeltaT = stopCurrentTime - stopStartingTime;
-  //Serial.println(stopDeltaT);
-	if (stopDeltaT > 3000)
-		{
-			RST=1;
-		}
    }
+
+   if (exeOnce)
+   {
+      stopStartingTime = millis();
+      exeOnce = false;
+    }
+  long stopCurrentTime = millis();
+  long stopDeltaT = stopCurrentTime - stopStartingTime;
+  Serial.println(stopDeltaT);
+  Serial.println(" ");
+  Serial.println(stopDeltaT);
+  Serial.println(" ");
+    Serial.println(stopDeltaT);
+  Serial.println(" ");
+    Serial.println(stopDeltaT);
+  Serial.println(" ");
+    Serial.println(stopDeltaT);
+  Serial.println(" ");  
+  Serial.println(stopDeltaT);
+  Serial.println(" ");
+  
+
+  
+  if (stopDeltaT > 3000)
+    {
+      RST=1;
+    }
    
    if (Close==1)
    {
@@ -226,6 +251,8 @@ void SearchandCatchBalls()
   DCMotorCtl(CtlCmd[0], CtlCmd[1]);
   delay(10); //sample period
 }
+
+
 
 
 void Scan(int* p1, int* p2)
@@ -295,8 +322,7 @@ void DCMotorCtl(bool FWD, int degree)
       DesiredSpeed1 = 120;
       DesiredSpeed2 = 120;
       }
-      else
-      { // Low Speed
+      else{ // Low Speed
         DesiredSpeed1 = 40;
         DesiredSpeed2 = 40;
       }
@@ -332,6 +358,23 @@ void DCMotorCtl(bool FWD, int degree)
   Move(DesiredSpeed1,DesiredSpeed2);
 
   
+}
+
+//Garage Door Ctl
+
+void OpenGarageDoor(bool toOpen)
+{
+  const uint8_t* op = 1;
+  const uint8_t* cl = 0;
+  if(toOpen)
+  {
+    driver.send((uint8_t *)op, strlen(op));
+  }
+  else
+  {
+    driver.send((uint8_t *)cl, strlen(cl));
+  }
+  Serial.println("OPEN");
 }
 
 // Motor control
