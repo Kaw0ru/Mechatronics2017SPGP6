@@ -9,7 +9,7 @@ void setup() {
   // put your setup code here, to run once:
   SetupReceiver(8);
   gateServo.attach(9);
-  //Serial.begin(9600);
+  Serial.begin(9600);/
 }
 
 void loop() {
@@ -24,7 +24,7 @@ void loop() {
   {
     doorState = 1;
   }
-  //Serial.println(doorState);
+  Serial.println(doorState);
 
   //Serial.println(doorState);
   
