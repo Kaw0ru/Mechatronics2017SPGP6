@@ -8,8 +8,9 @@ bool doorState;
 void setup() {
   // put your setup code here, to run once:
   SetupReceiver(8);
-  gateServo.attach(9);
-  Serial.begin(9600);/
+  gateServo1.attach(9);
+  gateServo2.attach(10);
+  //Serial.begin(9600);//
 }
 
 void loop() {
@@ -30,10 +31,12 @@ void loop() {
   
   if (doorState == 1)
   {
-    gateServo.write(110);
+    gateServo1.write(110);
+    gateServo2.write(10);
   }
   else
   {
-    gateServo.write(10);
+    gateServo1.write(10);
+    gateServo2.write(110);
   }
 }
