@@ -2,7 +2,8 @@
 #include "Receiver.h"
 #include "ServoTimer2.h"
 
-ServoTimer2 gateServo;
+ServoTimer2 gateServo1;
+ServoTimer2 gateServo2;
 bool doorState;
 
 void setup() {
@@ -31,12 +32,13 @@ void loop() {
   
   if (doorState == 1)
   {
-    gateServo1.write(110);
-    gateServo2.write(10);
+    gateServo1.write(120);
+    gateServo2.write(110);
   }
   else
   {
-    gateServo1.write(10);
-    gateServo2.write(110);
+    gateServo2.write(5);
+    delay(1000);
+    gateServo1.write(30);
   }
 }
